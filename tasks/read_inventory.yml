@@ -1,0 +1,41 @@
+#
+# Title:        HPNA Dynamic Inventory 
+# Author:       Andrew Grabbs
+# Email:        Andrew@AndrewGrabbs.com
+#
+---
+# Create & Validate HPNA Snapshot 
+- name: "Requesting Group: {{ HPNA_GROUP }} "
+  uri:
+    url: "{{ HPNA_API_URL }}"
+    status_code: 200
+    method: POST
+    follow_redirects: all
+    return_content: yes
+    validate_certs: False
+    headers:
+      Content-Type: "text/xml;charset=UTF-8"
+    body: >
+        <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns="http://hp.com/nas/10/20">
+          <soapenv:Header/>
+          <soapenv:Body>
+            <ns:list_device>
+              <parameters>
+                <ns:sessionid>{{SESSION_ID}}</ns:sessionid>
+                <ns:group>{{HPNA_GROUP}}</ns:group>
+              </parameters>
+            </ns:list_device>
+          </soapenv:Body>
+        </soapenv:Envelope>
+  register: result
+
+- name: "Retrieving Hosts From XML"
+  set_fact:
+      hosts: "{{ (result['content'] | regex_findall('hostName>(.*?)</nas:hostName') | list) }}"
+
+- name: "Hosts for Group: {{HPNA_GROUP}}"
+  debug:
+    msg:
+    - "{{hosts}}"
+
+

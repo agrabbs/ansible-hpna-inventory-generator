@@ -1,0 +1,40 @@
+#
+# Title:        HPNA Dynamic Inventory Role
+# Author:       Andrew Grabbs
+# Email:        Andrew@AndrewGrabbs.com
+#
+---
+# Authentication for HPNA 
+- name: "Authenticating with HPNA"
+  uri:
+    url: "{{ HPNA_API_URL }}"
+    status_code: 200
+    method: POST
+    return_content: yes
+    follow_redirects: all
+    validate_certs: False
+    headers:
+      Content-Type: "text/xml;charset=UTF-8"
+    body: >
+      <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns="http://hp.com/nas/9/20">
+        <soapenv:Header/>
+        <soapenv:Body>
+          <ns:login>
+            <parameters>
+              <ns:username>{{ HPNA_USER }}</ns:username>
+              <ns:password>{{ HPNA_PASS }}</ns:password>
+            </parameters>
+          </ns:login>
+        </soapenv:Body>
+      </soapenv:Envelope>
+  register: result
+
+- name: "Storing Token: {{ (result.content | regex_findall('Text>(.*?)</nas')|list)[0] }}"
+  set_fact:
+      SESSION_ID: "{{ (result.content | regex_findall('Text>(.*?)</nas')|list)[0] }}"
+
+#- name: "Token: {{SESSION_ID}}"
+#  debug:
+#    msg:
+#    - "Here's a token!"
+#    - "{{ SESSION_ID }}"

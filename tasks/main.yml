@@ -1,0 +1,25 @@
+#
+# Title:        HPNA Dynamic Inventory Role
+# Author:       Andrew Grabbs
+# Email:        Andrew@AndrewGrabbs.com
+#
+---
+# Main file hpna-snapshot
+- name: "HPNA Dynamic Inventory: Authentication"
+
+  import_tasks: "tasks/authenticate.yml"
+  run_once: true
+  when:
+    - "SESSION_ID is undefined"
+  delegate_to: localhost
+
+- name: "HPNA Dynamic Inventory: Read Inventory"
+  import_tasks: "tasks/read_inventory.yml"
+  delegate_to: localhost
+
+- name: "Generating Host File"
+  copy:
+    content: "{% for host in hosts %}{{ host }}\n{% endfor %}"
+    dest: "../tmp/{{hostfile}}"
+  delegate_to: localhost
+  run_once: true
